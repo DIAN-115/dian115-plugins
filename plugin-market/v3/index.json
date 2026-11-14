@@ -1,0 +1,33 @@
+{
+  "schema_version": 3,
+  "repository": {
+    "id": "dian-115.dian115-plugins",
+    "name": "Deity 的 DIAN115 插件",
+    "homepage": "https://github.com/DIAN-115/dian115-plugins"
+  },
+  "plugins": [
+    {
+      "id": "dian-missing-subscribe",
+      "name": "缺集自动订阅",
+      "version": "1.0.6",
+      "author": "D丶",
+      "description": "多规则从上到下逐季匹配：自动订阅或忽略；支持观察期、单轮上限、资源来源；每小时与宿主缺集扫描双触发，提交前用 Emby 实时复核；某部剧从媒体库删除后同步删除它的订阅，另有每 10 分钟一次的独立核对任务，不用手动点运行。界面为 Liquid Glass 玻璃质感。",
+      "homepage": "https://github.com/DIAN-115/dian115-plugins",
+      "repository_url": "https://github.com/DIAN-115/dian115-plugins",
+      "source_url": "https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-subscribe-1.0.6.dian115p",
+      "sha256": "e4cf83b444c5feb65fdd4feac0570fed8620d7f4ad1a9921dda3871cb4953ed5",
+      "delivery": "protected-v4",
+      "changelog": "1.0.6：修新建的订阅没被计进「订阅进行中」——宿主偶尔把账本里新加的那一条只落成一个空对象，intent_id 一丢，页面就把它当成别人的订阅排除了。现在写入改成整块替换、新建后回池补查 id、保存后回读发现空壳就补写；对账拿运行记录里建过的季做凭据，把丢了 id 的账本认回来；页面统计与「订阅」页也改成按「季」核对订阅池，不再只认 intent_id。1.0.4：总览页小幅填充——三张统计卡各加一行小字（近 7 天新增 / 上次补齐时间 / 规则总数）；上次运行状态条补上触发来源标签；运行设置卡底部补一行说明；页面底部新增「最近记录」区，列出最近 4 条记录，可一键跳记录页。1.0.3：总览页布局重排——「上次运行」移到页面最上方，做成一条状态条；「自动运行」压缩成一行小开关；三张统计卡收小，运行设置改为两列，544 宽的面板下不再被压成单列。1.0.1：经宿主编译 MCP 正式编译（protected-v4）。新增独立任务「剧集删除同步」：每 10 分钟核对一次订阅对应的剧是否还留在 Emby 里，删掉一部剧后不用手动点「立即运行」也会自动收掉它的订阅；只读剧集列表，不读缺集报告、不建订阅。1.0.0：首发版本。规则引擎逐季匹配，动作只有自动订阅与忽略；修正新建或合并的订阅在本轮对账时被误判为已过期、页面每 12 秒同步后台结果；每轮读 Emby 还留着的剧集，某部剧（或整个库）被删后同步删除对应订阅。",
+      "keywords": [
+        "emby",
+        "tmdb",
+        "订阅",
+        "缺集",
+        "剧集",
+        "规则",
+        "液态玻璃",
+        "媒体库"
+      ]
+    }
+  ]
+}
