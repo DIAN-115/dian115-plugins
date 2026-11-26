@@ -500,7 +500,7 @@ export function mount(element, ctx) {
           el('div', { class: 'ms-record-title', text: `${item.title || '—'} ${seasonLabel(item.season)}` }),
           el('div', {
             class: 'ms-record-sub',
-            text: [item.rule ? `规则 · ${item.rule}` : '', item.needed ? `缺 ${item.needed}` : '', item.note || item.error || ''].filter(Boolean).join(' · '),
+            text: [item.rule ? `规则 · ${item.rule}` : '', (item.needed || item.episodes) ? `缺 ${item.needed || item.episodes}` : '', item.note || item.detail || item.error || ''].filter(Boolean).join(' · '),
           })),
         el('span', { class: `ms-tag ms-tag-${ACTION_TONE[item.action] || 'muted'}`, text: item.label || ACTION_LABEL[item.action] || '记录' })))
     })
@@ -528,5 +528,13 @@ export function mount(element, ctx) {
   }
 }
 
-const ACTION_LABEL = { created: '已订阅', failed: '失败', dropped: '已移除', merged: '已合并' }
-const ACTION_TONE = { created: 'info', failed: 'warn', dropped: 'muted', merged: 'ok' }
+const ACTION_LABEL = {
+  created: '已订阅', subscribed: '已订阅', merged: '已合并', updated: '已更新',
+  failed: '失败', error: '失败', skipped: '已跳过', ignored: '已忽略',
+  dropped: '已移除', removed: '已移除', pruned: '已移除',
+}
+const ACTION_TONE = {
+  created: 'info', subscribed: 'info', merged: 'ok', updated: 'ok',
+  failed: 'warn', error: 'warn', skipped: 'muted', ignored: 'muted',
+  dropped: 'muted', removed: 'muted', pruned: 'muted',
+}
