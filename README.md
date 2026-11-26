@@ -14,9 +14,9 @@ https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/plugin-market/v3
 
 ## 插件
 
-### 缺集自动订阅 · dian-missing-subscribe 1.1.2
+### 缺集自动订阅 · dian-missing-subscribe 1.1.3
 
-> 1.1.2：**没开播的季不自动订阅**——按 TMDB 该季首集播出日判断，播出日晚于今天的一律跳过，日志写「N 季还没开播」，开播后那一轮才建订阅（已存在的订阅不受影响）。包 70,990 字节，sha256 `dabca2c5d75ec08c53d2fde0e749fa63ea8d514af3da78e0bf59594a23b8e459`。
+> 1.1.3：**没开播的季不自动订阅**——按 TMDB 该季首集播出日判断，播出日晚于今天的一律跳过，日志写「N 季还没开播」，开播后那一轮才建订阅（已存在的订阅不受影响）。包 71,216 字节，sha256 `113c25c83ff4af547e9543ee0286ad21f53d1aa440f196d5a08421b63fff53a8`（内含 1.1.2 同一策略，另修「近 7 天新增」按现存订阅算）。
 
 读 Emby 缺集、按规则逐季判定，自动创建或合并 DIAN115 聚合订阅；装好后每 10 分钟核对一次账本。
 
@@ -64,12 +64,12 @@ https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/plugin-market/v3
 
 #### 安装
 
-DIAN115 插件中心 → 第三方插件，上传仓库根目录的 `dian-missing-subscribe-1.1.2.dian115p`。
+DIAN115 插件中心 → 第三方插件，上传仓库根目录的 `dian-missing-subscribe-1.1.3.dian115p`。
 
 已装旧版的宿主用「更新」原地升级（实例 id 不变）：
 
 ```
-https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-subscribe-1.1.2.dian115p
+https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-subscribe-1.1.3.dian115p
 ```
 
 这个包是宿主编译 MCP 输出的 `protected-v4` 正式包（内部只有 `release.json` / `runtime.bin` / `review.bin`），不是可读源码 zip。装好后若没在侧边栏看到，到插件管理「权限与显示」里打开「显示在侧边栏」。
@@ -80,7 +80,7 @@ https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-sub
 
 ## 明文源码
 
-`src/dian-missing-subscribe/` 是 1.1.2 的未加密源码（`plugin.json` / `jobs/` / `ui/`），可直接阅读或提 PR。结构与接口说明见该目录的 `README.md`。
+`src/dian-missing-subscribe/` 是 1.1.3 的未加密源码（`plugin.json` / `jobs/` / `ui/`），可直接阅读或提 PR。结构与接口说明见该目录的 `README.md`。
 
 ## 正式包
 
