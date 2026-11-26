@@ -1,6 +1,6 @@
 import {
   KEYS, DEFAULT_CONFIG, normalizeConfig, normalizeRules, expandEpisodes, episodesText,
-  seasonLabel, poolKey, isoNow, pushHistory, ruleTitleMatch,
+  seasonLabel, poolKey, isoNow, pushHistory, ruleTitleMatch, importLegacyLedger,
 } from './lib/state.js'
 import { listSeries, tvSeasons, missingEpisodes, candidateSeasons } from './lib/emby.js'
 import { listPool, createIntent } from './lib/pool.js'
@@ -18,6 +18,16 @@ export async function run(ctx, input) {
   const rules = normalizeRules(await ctx.storage.get(KEYS.rules)).filter((rule) => rule.enabled)
   const storedSubs = await ctx.storage.get(KEYS.subs)
   const subs = Array.isArray(storedSubs) ? storedSubs : []
+  if (!subs.length) {
+    // 升级到 1.1.x 后第一次运行：把 1.0.x 的账本接管过来。
+    const legacy = await ctx.storage.get(KEYS.legacyLedger)
+    const imported = importLegacyLedger(legacy)
+    if (imported.length) {
+      subs.push(...imported)
+      await ctx.task.log(`已接管旧账本 ${imported.length} 条订阅`)
+      await ctx.storage.set(KEYS.subs, subs)
+    }
+  }
   const cooldown = asObject(await ctx.storage.get(KEYS.cooldown))
   const storedHistory = await ctx.storage.get(KEYS.history)
   let history = Array.isArray(storedHistory) ? storedHistory : []
