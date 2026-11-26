@@ -2,7 +2,7 @@ import {
   KEYS, DEFAULT_CONFIG, normalizeConfig, normalizeRules, expandEpisodes, episodesText,
   seasonLabel, poolKey, isoNow, pushHistory, ruleTitleMatch, importLegacyLedger,
 } from './lib/state.js'
-import { listSeries, tvSeasons, missingEpisodes, candidateSeasons, seasonAired, todayYmd } from './lib/emby.js'
+import { listSeries, tvSeasons, missingEpisodes, candidateSeasons } from './lib/emby.js'
 import { listPool, createIntent } from './lib/pool.js'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -88,14 +88,7 @@ export async function run(ctx, input) {
         continue
       }
       const displayTitle = tv.title || title
-      const today = todayYmd()
-      const allSeasons = candidateSeasons(tv, rule)
-      const seasons = allSeasons.filter((season) => seasonAired(season, today))
-      const waiting = allSeasons.length - seasons.length
-      if (waiting > 0) {
-        stat.skipped += waiting
-        await ctx.task.log(`${displayTitle}：${waiting} 季还没开播，等开播后再订阅`)
-      }
+      const seasons = candidateSeasons(tv, rule)
       for (const season of seasons) {
         if (stat.created >= config.maxPerRound) break
         if (ctx.remaining() < 30000) break
