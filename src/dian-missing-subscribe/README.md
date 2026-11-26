@@ -1,4 +1,4 @@
-# 缺集自动订阅 · 1.1.0 明文源码
+# 缺集自动订阅 · 1.1.1 明文源码
 
 这里放的是 `dian-missing-subscribe` 的**未加密源码**（不是 `.dian115p` 安装包），方便直接阅读、改代码、提 PR。
 
@@ -41,12 +41,12 @@ dian-missing-subscribe/
 
 ```bash
 # 本机只做结构检查（不能代替编译）
-node scripts/check.mjs dian-missing-subscribe --pack dist/dian-missing-subscribe-1.1.0.dian115p
+node scripts/check.mjs dian-missing-subscribe --pack dist/dian-missing-subscribe-1.1.1.dian115p
 ```
 
-## 1.1.0 与 1.0.x 的差别
+## 1.1.1 / 1.1.0 与 1.0.x 的差别
 
 - 页面：统计从三张卡改成一条窄带（去掉「已补齐」卡，只留「订阅进行中」与「启用规则」），窄面板不再被拉宽
 - 最近记录改成带海报的列表，状态标签与片名同行，时间收在信息块里；宽面板自动分栏
 - 订阅账本键仍是 `实例:TMDB:季`，新增 `cooldown` / `last_run` 两份单独存储
-- 旧版（1.0.x）的 `rules` 结构不兼容，升级后需要重存一遍规则
+- 1.1.1 起自动接管 1.0.x 的 `ledger`（旧账本 → 新 `subs`），旧 `config` 下划线键自动映射，旧 `history` 动作（`subscribed` / `skipped` / `ignored` / `pruned`）正常映射标签
