@@ -190,7 +190,7 @@ export function mount(element, ctx) {
 
   function statsBand() {
     const running = state.subs.filter((sub) => sub.state !== '已齐全').length
-    const weekNew = state.history.filter((item) => item.action === 'created' && new Date(item.at).getTime() >= today(7)).length
+    const weekNew = state.subs.filter((sub) => new Date(sub.created_at || 0).getTime() >= today(7)).length
     const enabled = state.rules.filter((rule) => rule.enabled !== false).length
     return el('div', { class: 'ms-card ms-stats' },
       el('div', { class: 'ms-stat' },
