@@ -14,7 +14,9 @@ https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/plugin-market/v3
 
 ## 插件
 
-### 缺集自动订阅 · dian-missing-subscribe 1.1.0
+### 缺集自动订阅 · dian-missing-subscribe 1.1.1
+
+> 1.1.1 修复两处升级遗留：`ledger` 旧账本接管（否则「订阅进行中」显示 0）、`history` 旧动作标签（不再显示成「记录」）。包 65,529 字节，sha256 `ffcf450309109da93f5aab940f343b6744f56ba3aedeb0fb54ced9be41e51fe8`。
 
 读 Emby 缺集、按规则逐季判定，自动创建或合并 DIAN115 聚合订阅；装好后每 10 分钟核对一次账本。
 
@@ -57,16 +59,16 @@ https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/plugin-market/v3
 
 键是 `实例:TMDB:季`，另单独存 `config` / `rules` / `subs` / `cooldown` / `history` / `last_run`。
 
-> 注意：1.0.x 的规则结构与 1.1.0 不兼容，升级后要重存一条规则。
+> 升级自动接管 1.0.x：首次运行会把旧键 `ledger` 里的订阅导入新账本（旧订阅不会变孤儿），旧设置的下划线命名也会自动映射，旧记录动作（`subscribed` / `skipped` / `ignored` / `pruned`）正常显示标签。
 
 #### 安装
 
-DIAN115 插件中心 → 第三方插件，上传仓库根目录的 `dian-missing-subscribe-1.1.0.dian115p`。
+DIAN115 插件中心 → 第三方插件，上传仓库根目录的 `dian-missing-subscribe-1.1.1.dian115p`。
 
 已装旧版的宿主用「更新」原地升级（实例 id 不变）：
 
 ```
-https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-subscribe-1.1.0.dian115p
+https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-subscribe-1.1.1.dian115p
 ```
 
 这个包是宿主编译 MCP 输出的 `protected-v4` 正式包（内部只有 `release.json` / `runtime.bin` / `review.bin`），不是可读源码 zip。装好后若没在侧边栏看到，到插件管理「权限与显示」里打开「显示在侧边栏」。
@@ -77,7 +79,7 @@ https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-sub
 
 ## 明文源码
 
-`src/dian-missing-subscribe/` 是 1.1.0 的未加密源码（`plugin.json` / `jobs/` / `ui/`），可直接阅读或提 PR。结构与接口说明见该目录的 `README.md`。
+`src/dian-missing-subscribe/` 是 1.1.1 的未加密源码（`plugin.json` / `jobs/` / `ui/`），可直接阅读或提 PR。结构与接口说明见该目录的 `README.md`。
 
 ## 正式包
 
