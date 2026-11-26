@@ -1,4 +1,4 @@
-import { KEYS, normalizeConfig, expandEpisodes, episodesText, seasonLabel, poolKey, isoNow, pushHistory } from './lib/state.js'
+import { KEYS, normalizeConfig, expandEpisodes, episodesText, seasonLabel, poolKey, isoNow, pushHistory, importLegacyLedger } from './lib/state.js'
 import { missingEpisodes, listSeries, isSeriesInLibrary } from './lib/emby.js'
 import { listPool, patchEpisodes, deleteIntent } from './lib/pool.js'
 
@@ -14,7 +14,13 @@ export async function run(ctx, input) {
 
   const storedSubs = await ctx.storage.get(KEYS.subs)
   const subs = Array.isArray(storedSubs) ? storedSubs : []
-  if (!subs.length) return { checked: 0, dropped: 0, updated: 0 }
+  if (!subs.length) {
+    const imported = importLegacyLedger(await ctx.storage.get(KEYS.legacyLedger))
+    if (!imported.length) return { checked: 0, dropped: 0, updated: 0 }
+    subs.push(...imported)
+    await ctx.storage.set(KEYS.subs, subs)
+    await ctx.task.log(`已接管旧账本 ${imported.length} 条订阅`)
+  }
 
   const storedHistory = await ctx.storage.get(KEYS.history)
   let history = Array.isArray(storedHistory) ? storedHistory : []
