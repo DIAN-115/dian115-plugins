@@ -6,6 +6,8 @@ export const KEYS = {
   cooldown: 'cooldown',
   history: 'history',
   lastRun: 'last_run',
+  legacyLedger: 'ledger',
+  legacyIgnored: 'ignored',
 }
 
 export const DEFAULT_CONFIG = {
@@ -19,11 +21,28 @@ export const DEFAULT_CONFIG = {
   dropWhenDeleted: true,
 }
 
+// 1.0.x 的设置用的是下划线命名，读进来时按语义搬运。
+const LEGACY_CONFIG = {
+  auto_enabled: 'autoRun',
+  check_ledger: 'checkLedger',
+  max_per_run: 'maxPerRound',
+  cooldown_days: 'cooldownDays',
+  throttle_ms: 'intervalMs',
+  notify_enabled: 'notify',
+  notify_channel: 'channels',
+  drop_on_series_removed: 'dropWhenDeleted',
+}
+
 export function normalizeConfig(raw, legacy) {
   const base = Object.assign({}, DEFAULT_CONFIG)
-  if (raw && typeof raw === 'object' && !Array.isArray(raw)) Object.assign(base, pickNumbers(raw))
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    const mapped = {}
+    Object.keys(LEGACY_CONFIG).forEach((key) => {
+      if (raw[key] !== undefined) mapped[LEGACY_CONFIG[key]] = raw[key]
+    })
+    Object.assign(base, pickNumbers(Object.assign(mapped, raw)))
+  }
   if (legacy && typeof legacy === 'object') {
-    // 旧版总览的设置叫法不同，按语义搬运，未知字段忽略。
     if (typeof legacy.autoRun === 'boolean') base.autoRun = legacy.autoRun
     if (typeof legacy.notify === 'boolean') base.notify = legacy.notify
     if (typeof legacy.dropWhenDeleted === 'boolean') base.dropWhenDeleted = legacy.dropWhenDeleted
@@ -159,4 +178,35 @@ export function seasonAllowed(season, rule) {
   const picked = expandEpisodes(rule.seasons, 200)
   if (!picked.length) return true
   return picked.includes(number)
+}
+
+// 1.0.x 的账本是 { "实例:TMDB:季": { intent_id, episodes, title, poster_path ... } }，
+// 升级后第一轮把它接管成新结构，别让已经建好的订阅变成孤儿。
+export function importLegacyLedger(ledger) {
+  if (!ledger || typeof ledger !== 'object' || Array.isArray(ledger)) return []
+  return Object.keys(ledger).map((key) => {
+    const item = ledger[key] || {}
+    const parts = String(key).split(':')
+    const proxyId = Number(parts[0] || 0)
+    const tmdbId = Number(parts[1] || 0)
+    const season = Number(parts[2] || item.season || 0)
+    const firstSeen = Number(item.first_seen || 0)
+    const posterURL = String(item.poster_url || '')
+    return {
+      key,
+      pool_id: Number(item.intent_id || 0) || null,
+      title: String(item.title || ''),
+      season,
+      tmdb_id: tmdbId,
+      proxy_id: proxyId,
+      poster_path: String(item.poster_path || ''),
+      poster_url: /^https?:\/\//.test(posterURL) || posterURL.startsWith('/') ? posterURL : '',
+      covered: '',
+      needed: String(item.episodes || ''),
+      rule: '',
+      created_at: firstSeen > 0 ? new Date(firstSeen).toISOString() : isoNow(),
+      checked_at: isoNow(),
+      state: '进行中',
+    }
+  }).filter((entry) => entry.key && entry.title && entry.tmdb_id)
 }
