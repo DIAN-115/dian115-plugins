@@ -1,0 +1,57 @@
+{
+  "schema_version": 3,
+  "id": "dian-missing-subscribe",
+  "name": "缺集自动订阅",
+  "version": "1.1.2",
+  "author": "D丶",
+  "description": "按规则扫描 Emby 缺集，核对 TMDB 季集后自动创建或合并聚合订阅，支持观察期、单轮上限、冷却重试与结果通知。",
+  "homepage": "https://github.com/DIAN-115/dian115-plugins",
+  "repository_url": "https://github.com/DIAN-115/dian115-plugins",
+  "icon": "ui/icon.svg",
+  "requires": {
+    "api": "3.13"
+  },
+  "ui": {
+    "entry": "ui/page.js"
+  },
+  "menu": {
+    "title": "缺集自动订阅",
+    "order": 30
+  },
+  "jobs": [
+    {
+      "id": "scan",
+      "entry": "jobs/scan.js",
+      "title": "扫描缺集",
+      "default_schedule": "5 * * * *",
+      "timeout_seconds": 1800,
+      "retry": {
+        "attempts": 2,
+        "delay_seconds": 60
+      },
+      "recover": "recover"
+    },
+    {
+      "id": "audit",
+      "entry": "jobs/audit.js",
+      "title": "核对订阅",
+      "interval_seconds": 600,
+      "timeout_seconds": 900,
+      "recover": "recover"
+    }
+  ],
+  "declared_usage": {
+    "purpose": "扫描 Emby 缺集并按规则补建聚合订阅，定期核对已有订阅是否仍然需要",
+    "apis": [
+      "/api/plugin-host/emby/instances",
+      "/api/plugin-host/emby/libraries",
+      "/api/plugin-host/emby/items",
+      "/api/plugin-host/emby/episodes",
+      "/api/tmdb/tv/{id}",
+      "/api/subscribe/pool/intents",
+      "/api/subscribe/pool/intents/{id}/episodes",
+      "/api/extensions/v3/_notify/channels"
+    ],
+    "notifications": "按用户的运行设置发送运行结果与订阅变化"
+  }
+}
