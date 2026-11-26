@@ -1,52 +1,86 @@
-# 缺集自动订阅 · 1.1.1 明文源码
+# dian115-plugins
 
-这里放的是 `dian-missing-subscribe` 的**未加密源码**（不是 `.dian115p` 安装包），方便直接阅读、改代码、提 PR。
+DIAN115 第三方插件仓库。根目录是可安装的正式包，插件源索引在 `plugin-market/v3/index.json`，明文源码在 `src/`。
+
+## 作为插件源添加
+
+插件商店右侧支持一行一个索引地址，把下面这行粘进去即可：
 
 ```
-dian-missing-subscribe/
-├─ plugin.json         # v3 清单：ui.entry / jobs / declared_usage
-├─ jobs/
-│  ├─ scan.js          # 每小时扫描：规则 → 剧集 → TMDB 季 → Emby 缺集 → 建/合并订阅
-│  ├─ audit.js         # 每 10 分钟核对：订阅池没了就移除，剧被删就取消，否则 PATCH 集数
-│  └─ lib/
-│     ├─ state.js      # 存储键、默认设置、规则归一化、集数串展开/压缩、历史栈
-│     ├─ emby.js       # Emby / TMDB 只读查询
-│     └─ pool.js       # 聚合订阅池 list / create / patch / delete
-├─ ui/
-│  ├─ page.js          # 页面入口，export mount(element, ctx)，四个标签：总览/规则/订阅/记录
-│  ├─ styles.js        # 主题变量 + 玻璃质感样式
-│  ├─ lib.js           # DOM 助手、海报地址、时间格式化、默认设置
-│  └─ icon.svg
-└─ dist/               # 留给本机编译产物（不提交二进制）
+https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/plugin-market/v3/index.json
 ```
 
-## 结构约定
+索引里的包是经宿主编译 MCP 正式编译的 v4 包（`delivery: "protected-v4"`），从 URL / 市场安装走的就是这条路。正式包的开发者名称取签名绑定的 DIAN115 会员昵称，会覆盖插件清单里自填的作者。
 
-- 页面与静态资源只能放 `ui/`，后台代码放 `ui/` 之外；`ui/entry` 必须导出 `mount(element, ctx)`，返回值是卸载函数。
-- 后台没有 DOM、没有 Node 模块、没有 `fetch`，对外一律走 `ctx.api` / `ctx.storage` / `ctx.notify` / `ctx.sleep`，全部 `await`。
-- 存储键：`config` / `rules` / `subs` / `cooldown` / `history` / `last_run`。
-- 页面颜色全用宿主主题变量（`--app-bg` / `--app-surface` / `--app-text` / `--app-border` / `--app-accent`），窄面板（≤560px）自适应。
+## 插件
 
-## 接口
+### 缺集自动订阅 · dian-missing-subscribe 1.1.1
 
-- `GET /api/plugin-host/emby/items?type=Series&library_id=…&proxy_id=…&limit=50&offset=…`
-- `GET /api/plugin-host/emby/libraries`
-- `GET /api/plugin-host/emby/episodes?tmdb_id=…&season=…&total_episodes=…` → `covered_episodes` / `needed_episodes`
-- `GET /api/tmdb/tv/{id}` → `seasons[].season_number` / `episode_count`
-- `GET|POST /api/subscribe/pool/intents`，`PATCH /api/subscribe/pool/intents/{id}/episodes`，`DELETE /api/subscribe/pool/intents/{id}`
+> 1.1.1 修复两处升级遗留：`ledger` 旧账本接管（否则「订阅进行中」显示 0）、`history` 旧动作标签（不再显示成「记录」）。包 65,529 字节，sha256 `ffcf450309109da93f5aab940f343b6744f56ba3aedeb0fb54ced9be41e51fe8`。
 
-## 编译成安装包
+读 Emby 缺集、按规则逐季判定，自动创建或合并 DIAN115 聚合订阅；装好后每 10 分钟核对一次账本。
 
-明文包不能直接上架。改完后在宿主编译 MCP 里编译出 `protected-v4` 的 `.dian115p`，再放到仓库根目录，然后更新 `plugin-market/v3/index.json` 的版本与下载地址。
+**规则**
 
-```bash
-# 本机只做结构检查（不能代替编译）
-node scripts/check.mjs dian-missing-subscribe --pack dist/dian-missing-subscribe-1.1.1.dian115p
+- 规则列表可启用/停用、编辑、删除；一条规则管一类剧集
+- 筛选条件：包含关键词、排除关键词、季范围（如 `1-3,5`，留空为全部季，`0` 为特别篇）、每季至少缺几集、媒体库、Emby 实例 ID
+- 关键词按剧集名称包含匹配，排除词优先
+
+**触发与保护**
+
+- `scan` 任务默认每小时一次（`5 * * * *`），页面上「立即运行」也可手动触发
+- 「自动运行」开关默认开；关掉后只有手动运行才扫描
+- 单轮最多订阅（默认 20 条），超出的顺延到下一轮
+- 失败/异常进冷却（默认 7 天），冷却期内跳过同一季
+- 只动本插件自己建的订阅：别人的订阅不碰，已在订阅池里的季只计「已有」不重建
+
+**核对（audit）**
+
+每 10 分钟一轮，只核对本插件账本里的订阅：
+
+- 订阅池里已经没有了 → 从账本移除，记一条「已移除」
+- 这一季在 Emby 里完全没有了、且整部剧已不在媒体库 → 取消订阅（可在运行设置里关掉「剧集被删就删订阅」）
+- 否则把实时 `covered` / `needed` PATCH 回订阅池，账本同步更新
+
+**通知**
+
+运行结束按设置推送摘要，渠道可选全部 / Telegram / 企业微信；带 `dedupe_key`，同一轮不会重复发。
+
+**页面（Liquid Glass）**
+
+- 总览：顶部「上次运行」状态条（时间 + 触发来源 + 检查季数 + 本轮订阅数）；下面一条**窄带统计**，只有「订阅进行中」（小字「近 7 天新增 N」）与「启用规则」（小字「共 N 条」），没有「已补齐」卡；一行自动运行开关；运行设置两列；底部「最近记录」带海报，状态标签与片名同行、时间收在信息块里
+- 规则：列表 + 内联表单，改完即存
+- 订阅：本插件建的季，带海报、缺集串、规则名、更新时间，可单独取消
+- 记录：运行流水（已订阅 / 失败 / 已移除 / 已取消），带时间与原因
+- 窄面板（≤560px）自适应：统计压缩、列表单列，不被拉成一条长卷；宽面板最近记录自动分栏
+- 颜色全用宿主主题变量，`backdrop-filter` 玻璃底，样式限定在 `.ms` 作用域
+
+**存储**
+
+键是 `实例:TMDB:季`，另单独存 `config` / `rules` / `subs` / `cooldown` / `history` / `last_run`。
+
+> 升级自动接管 1.0.x：首次运行会把旧键 `ledger` 里的订阅导入新账本（旧订阅不会变孤儿），旧设置的下划线命名也会自动映射，旧记录动作（`subscribed` / `skipped` / `ignored` / `pruned`）正常显示标签。
+
+#### 安装
+
+DIAN115 插件中心 → 第三方插件，上传仓库根目录的 `dian-missing-subscribe-1.1.1.dian115p`。
+
+已装旧版的宿主用「更新」原地升级（实例 id 不变）：
+
+```
+https://raw.githubusercontent.com/DIAN-115/dian115-plugins/main/dian-missing-subscribe-1.1.1.dian115p
 ```
 
-## 1.1.1 / 1.1.0 与 1.0.x 的差别
+这个包是宿主编译 MCP 输出的 `protected-v4` 正式包（内部只有 `release.json` / `runtime.bin` / `review.bin`），不是可读源码 zip。装好后若没在侧边栏看到，到插件管理「权限与显示」里打开「显示在侧边栏」。
 
-- 页面：统计从三张卡改成一条窄带（去掉「已补齐」卡，只留「订阅进行中」与「启用规则」），窄面板不再被拉宽
-- 最近记录改成带海报的列表，状态标签与片名同行，时间收在信息块里；宽面板自动分栏
-- 订阅账本键仍是 `实例:TMDB:季`，新增 `cooldown` / `last_run` 两份单独存储
-- 1.1.1 起自动接管 1.0.x 的 `ledger`（旧账本 → 新 `subs`），旧 `config` 下划线键自动映射，旧 `history` 动作（`subscribed` / `skipped` / `ignored` / `pruned`）正常映射标签
+#### 关于安装检查的 risk
+
+宿主静态分析会把 `filter` / `sort` / `trim` / `padStart` 这类对动态值的方法调用归入「执行动态代码」，所以报告 `risk` 常显示 `unknown`。插件里没有 `eval`、没有 `new Function`、不碰凭据，这是启发式误判。
+
+## 明文源码
+
+`src/dian-missing-subscribe/` 是 1.1.1 的未加密源码（`plugin.json` / `jobs/` / `ui/`），可直接阅读或提 PR。结构与接口说明见该目录的 `README.md`。
+
+## 正式包
+
+仓库根目录的 `.dian115p` 由宿主编译 MCP 生成（`protected-v4`），本机压不出来，也不能用源码包上架。改动后提高版本号、重新编译、再「更新」安装即可；宿主不允许安装后再改代码。
