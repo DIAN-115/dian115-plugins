@@ -66,16 +66,3 @@ export function candidateSeasons(tv, rule) {
   return (tv.seasons || []).filter((season) => season.season === 0 ? rule.special : seasonAllowed(season.season, rule) && season.season > 0)
 }
 
-// 该季是否已经开播（首集播出日 ≤ 今天）；TMDB 没给播出日的一律按已开播处理。
-export function seasonAired(season, todayYmd) {
-  const air = String((season && season.air_date) || '').trim().slice(0, 10)
-  if (!air || !/^\d{4}-\d{2}-\d{2}$/.test(air)) return true
-  return air <= String(todayYmd)
-}
-
-// 宿主本地日期 YYYY-MM-DD
-export function todayYmd(date) {
-  const d = date || new Date()
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-}
