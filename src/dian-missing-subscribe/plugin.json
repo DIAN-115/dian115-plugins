@@ -2,7 +2,7 @@
   "schema_version": 3,
   "id": "dian-missing-subscribe",
   "name": "缺集自动订阅",
-  "version": "1.1.3",
+  "version": "1.1.4",
   "author": "D丶",
   "description": "按规则扫描 Emby 缺集，核对 TMDB 季集后自动创建或合并聚合订阅，支持观察期、单轮上限、冷却重试与结果通知。",
   "homepage": "https://github.com/DIAN-115/dian115-plugins",
